@@ -8,8 +8,11 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -18,13 +21,22 @@ import net.minecraftforge.fml.common.Mod;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib3.core.manager.AnimationData;
 
+import static cool.ender.stardust.turret.medium.RailGun1Medium.Block.BARREL_FACING;
+import static cool.ender.stardust.turret.medium.RailGun1Medium.Block.BASE_FACING;
+
+
 public class RailGun1Medium extends AbstractTurret {
 
 
     public static class Block extends AbstractTurret.Block implements TubeConnectable {
 
+        public static final DirectionProperty BASE_FACING = DirectionProperty.create("base_facing", Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST, Direction.UP, Direction.DOWN);
+        public static final DirectionProperty BARREL_FACING = DirectionProperty.create("barrel_facing",Direction.NORTH,Direction.WEST,Direction.EAST,Direction.SOUTH, Direction.UP, Direction.DOWN);
+
         public Block() {
             super(Properties.of(Material.STONE).noOcclusion());
+            this.registerDefaultState(this.stateDefinition.any().setValue(BASE_FACING, Direction.SOUTH)
+                    .setValue(BARREL_FACING,Direction.SOUTH));
         }
 
         public BlockEntity newBlockEntity(@NotNull BlockPos blockPos, @NotNull BlockState blockState) {
@@ -35,6 +47,18 @@ public class RailGun1Medium extends AbstractTurret {
         public boolean getConnectable(Direction direction) {
             return true;
         }
+
+        @Override
+        public BlockState getStateForPlacement( BlockPlaceContext context) {
+            return this.defaultBlockState().setValue(BARREL_FACING, context.getNearestLookingDirection().getOpposite())
+                    .setValue(BASE_FACING, context.getClickedFace());
+        }
+
+        @Override
+        protected void createBlockStateDefinition( StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState> p_52719_) {
+            p_52719_.add(BASE_FACING).add(BARREL_FACING);
+        }
+
     }
 
     public static class Tile extends AbstractTurret.Tile {
@@ -64,6 +88,58 @@ public class RailGun1Medium extends AbstractTurret {
         @Override
         public ResourceLocation getAnimationFileLocation(AbstractTurret.Tile animatable) {
             return null;
+        }
+
+        public void setCustomAnimations(AbstractTurret.Tile animatable, int instanceId) {
+            super.setCustomAnimations(animatable, instanceId);
+            switch (animatable.getBlockState().getValue(BASE_FACING)) {
+                case SOUTH -> {
+                    this.getAnimationProcessor().getBone("base").setRotationY((float) (Math.PI));
+                }
+
+                case NORTH -> {
+                }
+
+                case WEST -> {
+                    this.getAnimationProcessor().getBone("base").setRotationY((float) (Math.PI * 0.5));
+                }
+
+                case EAST -> {
+                    this.getAnimationProcessor().getBone("base").setRotationY((float) (Math.PI * -0.5));
+                }
+
+                case UP -> {
+                    this.getAnimationProcessor().getBone("base").setRotationZ((float) (Math.PI * -0.5));
+                }
+
+                case DOWN -> {
+                    this.getAnimationProcessor().getBone("base").setRotationZ((float) (Math.PI * 0.5));
+                }
+            }
+            switch (animatable.getBlockState().getValue(BARREL_FACING)) {
+                case SOUTH -> {
+                    this.getAnimationProcessor().getBone("barrel_moving_up_down").setRotationY((float) (Math.PI ));
+                }
+
+                case NORTH -> {
+                }
+
+                case WEST -> {
+                    this.getAnimationProcessor().getBone("barrel_moving_up_down").setRotationY((float) (Math.PI * 0.5));
+                }
+
+                case EAST -> {
+                    this.getAnimationProcessor().getBone("barrel_moving_up_down").setRotationY((float) (Math.PI * -0.5));
+                }
+                case UP -> {
+                    this.getAnimationProcessor().getBone("barrel_moving_up_down").setRotationZ((float) (Math.PI * -0.5));
+                }
+
+                case DOWN -> {
+                    this.getAnimationProcessor().getBone("barrel_moving_up_down").setRotationZ((float) (Math.PI * 0.5));
+                }
+
+            }
         }
     }
 
